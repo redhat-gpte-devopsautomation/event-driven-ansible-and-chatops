@@ -2,7 +2,7 @@
 - name: Listen for events on kafka
   hosts: all
   sources:
-    - ansible.eda.kafka_scram_aio:
+    - ansible.eda.kafka_scram:
         host: kafka-kafka-bootstrap.globex-mw.svc.cluster.local
         port: 9092
         topic: reviews.sentiment

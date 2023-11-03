@@ -1,0 +1,91 @@
+---
+
+- name: Pushing survey to rocketchat channel
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+
+  tasks:
+    - name: Send Rocket.Chat notification for clothing
+      when: 'ansible_eda.event.body.product.category == "clothing"'
+      uri:
+        url: "{{ rocketchat_host_message_url }}"
+        method: POST
+        validate_certs: false
+        headers:
+          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-User-Id: "{{ rocketchat_user_id }}"
+          Content-type: "application/json"
+        body_format: json
+        body: >-
+          {
+            "channel": "#clothing",
+             "text": [
+                "[:red_circle:]",
+                " *USER SENTIMENT:* _{{ ansible_eda.event.body.response }}_",
+                " *PRODUCT_CATEGORY:* _{{ ansible_eda.event.body.product.category }}_",
+                " *PRODUCT_ID:* _{{ ansible_eda.event.body.product.product_id }}_",
+                " *PRODUCT_NAME:* _{{ ansible_eda.event.body.product.product_name }}_",
+                " *USER NAME:* _{{ ansible_eda.event.body.user.name }}_",
+                " *REGION:* _{{ ansible_eda.event.body.user.region }}_",
+                " *REVIEW:* _{{ ansible_eda.event.body.review_text }}_",
+                " *SCORE:* _{{ ansible_eda.event.body.score }}_"
+                ]
+          }
+
+    - name: Send Rocket.Chat notification for utensils
+      when: 'ansible_eda.event.body.product.category == "utensils"'
+      uri:
+        url: "{{ rocketchat_host_message_url }}"
+        method: POST
+        validate_certs: false
+        headers:
+          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-User-Id: "{{ rocketchat_user_id }}"
+          Content-type: "application/json"
+        body_format: json
+        body: >-
+          {
+            "channel": "#utensils",
+             "text": [
+                "[:red_circle:]",
+                " *USER SENTIMENT:* _{{ ansible_eda.event.body.response }}_",
+                " *PRODUCT_CATEGORY:* _{{ ansible_eda.event.body.product.category }}_",
+                " *PRODUCT_ID:* _{{ ansible_eda.event.body.product.product_id }}_",
+                " *PRODUCT_NAME:* _{{ ansible_eda.event.body.product.product_name }}_",
+                " *USER NAME:* _{{ ansible_eda.event.body.user.name }}_",
+                " *REGION:* _{{ ansible_eda.event.body.user.region }}_",
+                " *REVIEW:* _{{ ansible_eda.event.body.review_text }}_",
+                " *SCORE:* _{{ ansible_eda.event.body.score }}_"
+                ]
+          }
+
+    - name: Send Rocket.Chat notification for utensils
+      when: 
+        - 'ansible_eda.event.body.product.category != "utensils"'
+        - 'ansible_eda.event.body.product.category != "clothing"'
+      uri:
+        url: "http://rocket-chat-rocket-chat.apps.cluster-5xx7w.5xx7w.sandbox1495.opentlc.com/api/v1/chat.postMessage"
+        method: POST
+        validate_certs: false
+        headers:
+          X-Auth-Token: "piCfy4ILPQZwOgCVxKvkhEhy6HWHjy4jOWL8x_3jLpD"
+          X-User-Id: "oP2uaK8TgMKxf73We"
+          Content-type: "application/json"
+        body_format: json
+        body: >-
+          {
+            "channel": "#general",
+             "text": [
+                "[:red_circle:]",
+                " *USER SENTIMENT:* _{{ ansible_eda.event.body.response }}_",
+                " *PRODUCT_CATEGORY:* _{{ ansible_eda.event.body.product.category }}_",
+                " *PRODUCT_ID:* _{{ ansible_eda.event.body.product.product_id }}_",
+                " *PRODUCT_NAME:* _{{ ansible_eda.event.body.product.product_name }}_",
+                " *USER NAME:* _{{ ansible_eda.event.body.user.name }}_",
+                " *REGION:* _{{ ansible_eda.event.body.user.region }}_",
+                " *REVIEW:* _{{ ansible_eda.event.body.review_text }}_",
+                " *SCORE:* _{{ ansible_eda.event.body.score }}_"
+                ]
+          }

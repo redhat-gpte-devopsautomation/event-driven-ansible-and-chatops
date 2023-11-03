@@ -1,0 +1,35 @@
+---
+- name: Pushing survey to rocketchat channel
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+
+  tasks:
+    - name: Action for clothing
+      when: ansible_eda.event.payload.channel_name == "clothing"
+      block:
+
+        - name: Action for discount
+          when: '"DISCOUNT" in ansible_eda.event.payload.text'
+          ansible.builtin.debug:
+            msg: "{{ ansible_eda.event.payload.text }}"
+
+        - name: Action for Disable
+          when: '"DISABLE" in ansible_eda.event.payload.text'
+          ansible.builtin.debug:
+            msg: "{{ ansible_eda.event.payload.text }}"
+
+    - name: Action for clothing
+      when: ansible_eda.event.payload.channel_name == "utensils"
+      block:
+
+        - name: Action for discount
+          when: '"DISCOUNT" in ansible_eda.event.payload.text'
+          ansible.builtin.debug:
+            msg: "{{ ansible_eda.event.payload.text }}"
+
+        - name: Action for Disable
+          when: '"DISABLE" in ansible_eda.event.payload.text'
+          ansible.builtin.debug:
+            msg: "{{ ansible_eda.event.payload.text }}"

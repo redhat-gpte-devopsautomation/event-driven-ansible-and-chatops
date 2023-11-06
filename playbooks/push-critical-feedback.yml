@@ -70,8 +70,8 @@
         method: POST
         validate_certs: false
         headers:
-          X-Auth-Token: "piCfy4ILPQZwOgCVxKvkhEhy6HWHjy4jOWL8x_3jLpD"
-          X-User-Id: "oP2uaK8TgMKxf73We"
+          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-User-Id: "{{ rocketchat_user_id }}"
           Content-type: "application/json"
         body_format: json
         body: >-

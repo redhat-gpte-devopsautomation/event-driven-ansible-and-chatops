@@ -10,11 +10,11 @@
     - name: Send Rocket.Chat notification for clothing
       when: 'ansible_eda.event.body.product.category == "clothing"'
       uri:
-        url: "{{ rocketchat_host_message_url }}/api/v1/chat.postMessage"
+        url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
         method: POST
         validate_certs: false
         headers:
-          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-Auth-Token: "{{ rocketchat_auth_token }}"
           X-User-Id: "{{ rocketchat_user_id }}"
           Content-type: "application/json"
         body_format: json
@@ -37,11 +37,11 @@
     - name: Send Rocket.Chat notification for utensils
       when: 'ansible_eda.event.body.product.category == "utensils"'
       uri:
-        url: "{{ rocketchat_host_message_url }}/api/v1/chat.postMessage"
+        url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
         method: POST
         validate_certs: false
         headers:
-          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-Auth-Token: "{{ rocketchat_auth_token }}"
           X-User-Id: "{{ rocketchat_user_id }}"
           Content-type: "application/json"
         body_format: json
@@ -66,11 +66,11 @@
         - 'ansible_eda.event.body.product.category != "utensils"'
         - 'ansible_eda.event.body.product.category != "clothing"'
       uri:
-        url: "{{ rocketchat_host_message_url }}/api/v1/chat.postMessage"
+        url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
         method: POST
         validate_certs: false
         headers:
-          X-Auth-Token: "{{ rocketchat_user_auth_token }}"
+          X-Auth-Token: "{{ rocketchat_auth_token }}"
           X-User-Id: "{{ rocketchat_user_id }}"
           Content-type: "application/json"
         body_format: json

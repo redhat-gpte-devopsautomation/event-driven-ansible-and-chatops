@@ -6,6 +6,10 @@
   vars:
 
   tasks:
+    - name: Install python library for pgql
+      pip:
+        name: psycopg2_binary==2.9.9
+
     - name: Action for clothing
       when: ansible_eda.event.payload.channel_name == "clothing"
       block:

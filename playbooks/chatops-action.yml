@@ -13,11 +13,19 @@
     - name: Action for clothing
       when: ansible_eda.event.payload.channel_name == "clothing"
       block:
-
         - name: Action for discount
           when: '"DISCOUNT" in ansible_eda.event.payload.text'
           ansible.builtin.debug:
             msg: "{{ ansible_eda.event.payload.text }}"
+
+        - name: Alter psql inventory
+          when: '"DISCOUNT" in ansible_eda.event.payload.text'
+          community.postgresql.postgresql_query:
+            db: globex
+            query: UPDATE inventory SET quantity=0 WHERE itemid='329199'
+            login_host: globex-db.globex.svc.cluster.local
+            login_user: globex
+            login_password: globex
 
         - name: Action for Disable
           when: '"DISABLE" in ansible_eda.event.payload.text'

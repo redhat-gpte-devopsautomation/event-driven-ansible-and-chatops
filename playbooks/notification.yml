@@ -1,0 +1,53 @@
+---
+- name: Send RocketChat completed notification for {{ channel_name }}
+  when: r_result.changed | bool
+  uri:
+    url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
+    method: POST
+    validate_certs: false
+    headers:
+      X-Auth-Token: "{{ rocketchat_auth_token }}"
+      X-User-Id: "{{ rocketchat_user_id }}"
+      Content-type: "application/json"
+    body_format: json
+    body: >-
+      {
+        "channel": "#{{ channel_name }}",
+        "text": "[:white_check_mark:] _Your request *{{ ansible_eda.event.payload.text }}* is completed._"
+      }
+
+- name: Send RocketChat Failed notification for {{ channel_name }}
+  when: not r_result.changed | bool
+  uri:
+    url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
+    method: POST
+    validate_certs: false
+    headers:
+      X-Auth-Token: "{{ rocketchat_auth_token }}"
+      X-User-Id: "{{ rocketchat_user_id }}"
+      Content-type: "application/json"
+    body_format: json
+    body: >-
+      {
+        "channel": "#{{ channel_name }}",
+        "text": "[:x:] _Your request *{{ ansible_eda.event.payload.text }}* is not completed._"
+      }  
+
+- name: Send RocketChat Failed notification for {{ channel_name }}
+  when: 
+    - r_result.failed is defined
+    - r_result.failed | bool
+  uri:
+    url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
+    method: POST
+    validate_certs: false
+    headers:
+      X-Auth-Token: "{{ rocketchat_auth_token }}"
+      X-User-Id: "{{ rocketchat_user_id }}"
+      Content-type: "application/json"
+    body_format: json
+    body: >-
+      {
+        "channel": "#{{ channel_name }}",
+        "text": "[:x:] _Your request *{{ ansible_eda.event.payload.text }}* is not completed._"
+      }

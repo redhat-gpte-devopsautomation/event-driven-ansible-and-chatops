@@ -1,0 +1,18 @@
+= event-driven-ansible-and-chatops
+
+== Define following vars for chatops-action.yml
+|===
+| eda_chatops_retail_db_host: | <CHANGEME eg. globex-db.globex.svc.cluster.local >
+| eda_chatops_retail_db_username: | <CHANGEME eg. globex >
+| eda_chatops_retail_db_password: | <CHANGEME eg. globex >
+| eda_chatops_retail_db_name: | <CHANGEME eg. globex >
+|===
+
+== Define following vars for all of the playbooks
+
+|===
+|rocketchat_auth_token: | <CHANGEME eg. _mw9AnIM7AJgyDjwJfvDroVGvon3Hx640AcePi0gi2U>
+| rocketchat_url: | <CHANGEME eg. https://rocket-chat-rocketchat.apps.cluster-bcg6f.bcg6f.sandbox1941.opentlc.com >
+| rocketchat_user_id: | <CHANGEME eg. fvF55bBBMQdutwThv>
+|===
+

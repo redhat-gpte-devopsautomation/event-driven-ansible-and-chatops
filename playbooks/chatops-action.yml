@@ -3,45 +3,211 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  vars:
-
   tasks:
     - name: Install python library for pgql
       pip:
         name: psycopg2_binary==2.9.9
 
-    - name: Action for clothing
-      when: ansible_eda.event.payload.channel_name == "clothing"
-      block:
-        - name: Action for discount
-          when: '"DISCOUNT" in ansible_eda.event.payload.text'
-          ansible.builtin.debug:
-            msg: "{{ ansible_eda.event.payload.text }}"
+    - name: Filter text payload
+      set_fact:
+        product_action: "{{ ansible_eda.event.payload.text.split(',').0 | default('') | trim  | upper  }}"
+        product_id: "{{ ansible_eda.event.payload.text.split(',').1     | default('') | trim }}"
+        product_price: "{{ ansible_eda.event.payload.text.split(',').2  | default('') | trim }}"
 
-        - name: Alter psql inventory
-          when: '"DISCOUNT" in ansible_eda.event.payload.text'
-          community.postgresql.postgresql_query:
-            db: globex
-            query: UPDATE inventory SET quantity=0 WHERE itemid='329199'
-            login_host: globex-db.globex.svc.cluster.local
-            login_user: globex
-            login_password: globex
-
-        - name: Action for Disable
-          when: '"DISABLE" in ansible_eda.event.payload.text'
-          ansible.builtin.debug:
-            msg: "{{ ansible_eda.event.payload.text }}"
-
-    - name: Action for clothing
-      when: ansible_eda.event.payload.channel_name == "utensils"
+    # Block for clothing channel
+    - name: Action for clothing channel
+      when:
+        - ansible_eda.event.payload.channel_name == "clothing"
+        - ( "UPDATE" == product_action  or
+            "DISCONTINUE" == product_action  or
+            "CONTINUE" == product_action
+          )
       block:
 
-        - name: Action for discount
-          when: '"DISCOUNT" in ansible_eda.event.payload.text'
-          ansible.builtin.debug:
-            msg: "{{ ansible_eda.event.payload.text }}"
+        - name: Block for UPDATE
+          when: 
+            - product_action == "UPDATE"
+            - product_id    | length > 0
+            - product_price | length > 0
+          block:
+            - name: Action for UPDATE
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE catalog SET price={{ product_price }} WHERE item_id='{{ product_id }}'
+              register: r_clothing_update_result
+              ignore_errors: true
 
-        - name: Action for Disable
-          when: '"DISABLE" in ansible_eda.event.payload.text'
-          ansible.builtin.debug:
-            msg: "{{ ansible_eda.event.payload.text }}"
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_clothing_update_result }}"
+                channel_name: clothing
+
+        - name: Block for DISCONTINUE
+          when: 
+            - product_action == "DISCONTINUE"
+            - product_id | length > 0
+          block:
+            - name: Action for discontinue
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE inventory SET quantity=0 WHERE itemid='{{ product_id }}'
+              register: r_clothing_discontinue_result
+              ignore_errors: true
+
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_clothing_discontinue_result }}"
+                channel_name: clothing
+
+        - name: Block for CONTINUE
+          when:
+            - product_action == "CONTINUE"
+            - product_id | length > 0
+          block:
+            - name: Action for continue
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE inventory SET quantity=50 WHERE itemid='{{ product_id }}'
+              register: r_clothing_continue_result
+              ignore_errors: true
+
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_clothing_continue_result }}"
+                channel_name: clothing
+
+        - debug: var=r_clothing_update_result
+        - debug: var=r_clothing_discontinue_result
+        - debug: var=r_clothing_continue_result
+
+      always:
+        - name: Send RocketChat Skipped notification for clothing
+          when: 
+            - r_clothing_update_result.skipped      | default(false) | bool
+            - r_clothing_discontinue_result.skipped | default(false) | bool
+            - r_clothing_continue_result.skipped    | default(false) | bool
+          uri:
+            url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
+            method: POST
+            validate_certs: false
+            headers:
+              X-Auth-Token: "{{ rocketchat_auth_token }}"
+              X-User-Id: "{{ rocketchat_user_id }}"
+              Content-type: "application/json"
+            body_format: json
+            body: >-
+              {
+                "channel": "#clothing",
+                "text": "[:x:] _Your request *{{ ansible_eda.event.payload.text }}* is not completed._"
+              }
+
+    # Block for utensils channel
+    - name: Action for utensils channel
+      when:
+        - ansible_eda.event.payload.channel_name == "utensils"
+        - ( "UPDATE" == product_action  or
+            "DISCONTINUE" == product_action  or
+            "CONTINUE" == product_action
+          )
+      block:
+
+        - name: Block for UPDATE
+          when: 
+            - product_action == "UPDATE"
+            - product_id    | length > 0
+            - product_price | length > 0
+          block:
+            - name: Action for UPDATE
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE catalog SET price={{ product_price }} WHERE item_id='{{ product_id }}'
+              register: r_utensils_update_result
+              ignore_errors: true
+
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_utensils_update_result }}"
+                channel_name: utensils
+
+        - name: Block for DISCONTINUE
+          when: 
+            - product_action == "DISCONTINUE"
+            - product_id | length > 0
+          block:
+            - name: Action for discontinue
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE inventory SET quantity=0 WHERE itemid='{{ product_id }}'
+              register: r_utensils_discontinue_result
+              ignore_errors: true
+
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_utensils_discontinue_result }}"
+                channel_name: utensils
+
+        - name: Block for CONTINUE
+          when:
+            - product_action == "CONTINUE"
+            - product_id | length > 0
+          block:
+            - name: Action for continue
+              community.postgresql.postgresql_query:
+                db: "{{ eda_chatops_retail_db_name }}"
+                login_host: "{{ eda_chatops_retail_db_host }}"
+                login_user: "{{ eda_chatops_retail_db_username }}"
+                login_password: "{{ eda_chatops_retail_db_password }}"
+                query: UPDATE inventory SET quantity=50 WHERE itemid='{{ product_id }}'
+              register: r_utensils_continue_result
+              ignore_errors: true
+
+            - name: Include notification tasks
+              include_tasks: notification.yml
+              vars:
+                r_result: "{{ r_utensils_continue_result }}"
+                channel_name: utensils
+
+        - debug: var=r_utensils_update_result
+        - debug: var=r_utensils_discontinue_result
+        - debug: var=r_utensils_continue_result
+
+      always:
+        - name: Send RocketChat Skipped notification for utensils
+          when: 
+            - r_utensils_update_result.skipped      | default(false) | bool
+            - r_utensils_discontinue_result.skipped | default(false) | bool
+            - r_utensils_continue_result.skipped    | default(false) | bool
+          uri:
+            url: "{{ rocketchat_url }}/api/v1/chat.postMessage"
+            method: POST
+            validate_certs: false
+            headers:
+              X-Auth-Token: "{{ rocketchat_auth_token }}"
+              X-User-Id: "{{ rocketchat_user_id }}"
+              Content-type: "application/json"
+            body_format: json
+            body: >-
+              {
+                "channel": "#utensils",
+                "text": "[:x:] _Your request *{{ ansible_eda.event.payload.text }}* is not completed._"
+              }

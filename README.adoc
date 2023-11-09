@@ -11,8 +11,7 @@
 == Define following vars for all of the playbooks
 
 |===
-|rocketchat_auth_token: | <CHANGEME eg. _mw9AnIM7AJgyDjwJfvDroVGvon3Hx640AcePi0gi2U>
+| rocketchat_auth_token: | <CHANGEME eg. _mw9AnIM7AJgyDjwJfvDroVGvon3Hx640AcePi0gi2U>
 | rocketchat_url: | <CHANGEME eg. https://rocket-chat-rocketchat.apps.cluster-bcg6f.bcg6f.sandbox1941.opentlc.com >
 | rocketchat_user_id: | <CHANGEME eg. fvF55bBBMQdutwThv>
 |===
-
